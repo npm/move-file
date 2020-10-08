@@ -9,14 +9,15 @@ const {
   unlinkSync,
   rename: rename_,
   renameSync,
+  mkdir: mkdir_,
+  mkdirSync,
 } = require('fs')
 
 const access = promisify(access_)
 const copyFile = promisify(copyFile_)
 const unlink = promisify(unlink_)
 const rename = promisify(rename_)
-
-const mkdirp = require('mkdirp')
+const mkdir = promisify(mkdir_)
 
 const pathExists = async path => {
   try {
@@ -50,7 +51,7 @@ module.exports = async (source, destination, options = {}) => {
     throw new Error(`The destination file exists: ${destination}`)
   }
 
-  await mkdirp(dirname(destination))
+  await mkdir(dirname(destination), { recursive: true })
 
   try {
     await rename(source, destination)
@@ -78,7 +79,7 @@ module.exports.sync = (source, destination, options = {}) => {
     throw new Error(`The destination file exists: ${destination}`)
   }
 
-  mkdirp.sync(dirname(destination))
+  mkdirSync(dirname(destination), { recursive: true })
 
   try {
     renameSync(source, destination)
