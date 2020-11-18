@@ -73,20 +73,30 @@ t.test('move a directory across devices', async t => {
       two: fixture,
       sub: {
         three: fixture,
-        four: fixture
-      }
+        four: fixture,
+        five: t.fixture('symlink', './four'),
+        reallysub: {
+          six: t.fixture('symlink', '../../one')
+        }
+      },
+      link: t.fixture('symlink', './sub')
     }
   })
   const dest = `${dir}/dest`
   moveFile.sync(`${dir}/src`, dest)
-  const destStat = fs.statSync(dest)
-  t.ok(destStat.isDirectory(), 'created a directory')
+  t.ok(fs.statSync(dest).isDirectory(), 'created a directory')
   t.equal(fs.readFileSync(`${dest}/one`, 'utf8'), fixture, 'copied file one')
   t.equal(fs.readFileSync(`${dest}/two`, 'utf8'), fixture, 'copied file two')
-  const subStat = fs.statSync(`${dest}/sub`)
-  t.ok(subStat.isDirectory(), 'created the subdirectory')
+  t.ok(fs.statSync(`${dest}/sub`).isDirectory(), 'created the subdirectory')
   t.equal(fs.readFileSync(`${dest}/sub/three`, 'utf8'), fixture, 'copied file three')
   t.equal(fs.readFileSync(`${dest}/sub/four`, 'utf8'), fixture, 'copied file four')
+  t.ok(fs.lstatSync(`${dest}/sub/five`).isSymbolicLink(), 'created a file symbolic link')
+  t.equal(fs.readlinkSync(`${dest}/sub/five`), './four', 'created file symlink')
+  t.ok(fs.lstatSync(`${dest}/link`).isSymbolicLink(), 'created a directory symbolic link')
+  t.equal(fs.readlinkSync(`${dest}/link`), './sub', 'created the directory symbolic link with the correct target')
+  t.ok(fs.lstatSync(`${dest}/sub/reallysub`).isDirectory(), 'created the innermost subdirectory')
+  t.ok(fs.lstatSync(`${dest}/sub/reallysub/six`).isSymbolicLink(), 'created the innermost symlink')
+  t.equal(fs.readlinkSync(`${dest}/sub/reallysub/six`), '../../one', 'created the symlink with the appropriate target')
 })
 
 t.test('other types of errors fail', async t => {
