@@ -13,12 +13,12 @@ t.test('move a file', async t => {
   })
   const dest = `${dir}/dest`
   moveFile.sync(`${dir}/src`, dest)
-	t.equal(fs.readFileSync(dest, 'utf8'), fixture)
+  t.equal(fs.readFileSync(dest, 'utf8'), fixture)
 })
 
 t.test('move a file across devices', async t => {
-	const exdevError = new Error()
-	exdevError.code = 'EXDEV'
+  const exdevError = new Error()
+  exdevError.code = 'EXDEV'
   const moveFile = requireInject('../', {
     fs: {
       ...fs,
@@ -31,12 +31,12 @@ t.test('move a file across devices', async t => {
   })
   const dest = `${dir}/dest`
   moveFile.sync(`${dir}/src`, dest)
-	t.equal(fs.readFileSync(dest, 'utf8'), fixture)
+  t.equal(fs.readFileSync(dest, 'utf8'), fixture)
 })
 
 t.test('other types of errors fail', async t => {
-	const randoError = new Error()
-	randoError.code = 'ERANDO'
+  const randoError = new Error()
+  randoError.code = 'ERANDO'
   const moveFile = requireInject('../', {
     fs: {
       ...fs,
