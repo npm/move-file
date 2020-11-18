@@ -1,4 +1,4 @@
-const { dirname } = require('path')
+const { dirname, join } = require('path')
 const { promisify } = require('util')
 const {
   access: access_,
@@ -7,14 +7,20 @@ const {
   copyFileSync,
   unlink: unlink_,
   unlinkSync,
+  readdir: readdir_,
+  readdirSync,
   rename: rename_,
   renameSync,
+  lstat: lstat_,
+  lstatSync,
 } = require('fs')
 
 const access = promisify(access_)
 const copyFile = promisify(copyFile_)
 const unlink = promisify(unlink_)
+const readdir = promisify(readdir_)
 const rename = promisify(rename_)
+const lstat = promisify(lstat_)
 
 const mkdirp = require('mkdirp')
 
@@ -36,7 +42,7 @@ const pathExistsSync = path => {
   }
 }
 
-module.exports = async (source, destination, options = {}) => {
+const moveFile = async (source, destination, options = {}) => {
   if (!source || !destination) {
     throw new TypeError('`source` and `destination` file required')
   }
@@ -56,15 +62,23 @@ module.exports = async (source, destination, options = {}) => {
     await rename(source, destination)
   } catch (error) {
     if (error.code === 'EXDEV') {
-      await copyFile(source, destination)
-      await unlink(source)
+      const stat = await lstat(source)
+      if (stat.isDirectory()) {
+        const files = await readdir(source)
+        for (const file of files) {
+          await moveFile(join(source, file), join(destination, file), options)
+        }
+      } else {
+        await copyFile(source, destination)
+        await unlink(source)
+      }
     } else {
       throw error
     }
   }
 }
 
-module.exports.sync = (source, destination, options = {}) => {
+const moveFileSync = (source, destination, options = {}) => {
   if (!source || !destination) {
     throw new TypeError('`source` and `destination` file required')
   }
@@ -84,10 +98,21 @@ module.exports.sync = (source, destination, options = {}) => {
     renameSync(source, destination)
   } catch (error) {
     if (error.code === 'EXDEV') {
-      copyFileSync(source, destination)
-      unlinkSync(source)
+      const stat = lstatSync(source)
+      if (stat.isDirectory()) {
+        const files = readdirSync(source)
+        for (const file of files) {
+          moveFileSync(join(source, file), join(destination, file), options)
+        }
+      } else {
+        copyFileSync(source, destination)
+        unlinkSync(source)
+      }
     } else {
       throw error
     }
   }
 }
+
+module.exports = moveFile
+module.exports.sync = moveFileSync

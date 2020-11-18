@@ -16,6 +16,29 @@ t.test('move a file', async t => {
   t.equal(fs.readFileSync(dest, 'utf8'), fixture)
 })
 
+t.test('move a directory', async t => {
+  const dir = t.testdir({
+    src: {
+      one: fixture,
+      two: fixture,
+      sub: {
+        three: fixture,
+        four: fixture
+      }
+    }
+  })
+  const dest = `${dir}/dest`
+  moveFile.sync(`${dir}/src`, dest)
+  const destStat = fs.statSync(dest)
+  t.ok(destStat.isDirectory(), 'created a directory')
+  t.equal(fs.readFileSync(`${dest}/one`, 'utf8'), fixture, 'copied file one')
+  t.equal(fs.readFileSync(`${dest}/two`, 'utf8'), fixture, 'copied file two')
+  const subStat = fs.statSync(`${dest}/sub`)
+  t.ok(subStat.isDirectory(), 'created the subdirectory')
+  t.equal(fs.readFileSync(`${dest}/sub/three`, 'utf8'), fixture, 'copied file three')
+  t.equal(fs.readFileSync(`${dest}/sub/four`, 'utf8'), fixture, 'copied file four')
+})
+
 t.test('move a file across devices', async t => {
   const exdevError = new Error()
   exdevError.code = 'EXDEV'
@@ -32,6 +55,38 @@ t.test('move a file across devices', async t => {
   const dest = `${dir}/dest`
   moveFile.sync(`${dir}/src`, dest)
   t.equal(fs.readFileSync(dest, 'utf8'), fixture)
+})
+
+t.test('move a directory across devices', async t => {
+  const exdevError = new Error()
+  exdevError.code = 'EXDEV'
+  const moveFile = requireInject('../', {
+    fs: {
+      ...fs,
+      renameSync: () => { throw exdevError },
+    },
+  })
+
+  const dir = t.testdir({
+    src: {
+      one: fixture,
+      two: fixture,
+      sub: {
+        three: fixture,
+        four: fixture
+      }
+    }
+  })
+  const dest = `${dir}/dest`
+  moveFile.sync(`${dir}/src`, dest)
+  const destStat = fs.statSync(dest)
+  t.ok(destStat.isDirectory(), 'created a directory')
+  t.equal(fs.readFileSync(`${dest}/one`, 'utf8'), fixture, 'copied file one')
+  t.equal(fs.readFileSync(`${dest}/two`, 'utf8'), fixture, 'copied file two')
+  const subStat = fs.statSync(`${dest}/sub`)
+  t.ok(subStat.isDirectory(), 'created the subdirectory')
+  t.equal(fs.readFileSync(`${dest}/sub/three`, 'utf8'), fixture, 'copied file three')
+  t.equal(fs.readFileSync(`${dest}/sub/four`, 'utf8'), fixture, 'copied file four')
 })
 
 t.test('other types of errors fail', async t => {
