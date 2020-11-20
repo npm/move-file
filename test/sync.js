@@ -1,4 +1,5 @@
 const fs = require('fs')
+const {join} = require('path')
 const t = require('tap')
 const moveFile = require('../')
 const requireInject = require('require-inject')
@@ -91,12 +92,13 @@ t.test('move a directory across devices', async t => {
   t.equal(fs.readFileSync(`${dest}/sub/three`, 'utf8'), fixture, 'copied file three')
   t.equal(fs.readFileSync(`${dest}/sub/four`, 'utf8'), fixture, 'copied file four')
   t.ok(fs.lstatSync(`${dest}/sub/five`).isSymbolicLink(), 'created a file symbolic link')
-  t.equal(fs.readlinkSync(`${dest}/sub/five`), './four', 'created file symlink')
+  t.equal(fs.readlinkSync(`${dest}/sub/five`).replace(/\\/g, '/'), './four', 'created file symlink')
   t.ok(fs.lstatSync(`${dest}/link`).isSymbolicLink(), 'created a directory symbolic link')
-  t.equal(fs.readlinkSync(`${dest}/link`), './sub', 'created the directory symbolic link with the correct target')
+  // below assertion varies for windows because junctions are absolute paths
+  t.equal(fs.readlinkSync(`${dest}/link`), process.platform === 'win32' ? join(dest, 'sub\\') : './sub', 'created the directory symbolic link with the correct target')
   t.ok(fs.lstatSync(`${dest}/sub/reallysub`).isDirectory(), 'created the innermost subdirectory')
   t.ok(fs.lstatSync(`${dest}/sub/reallysub/six`).isSymbolicLink(), 'created the innermost symlink')
-  t.equal(fs.readlinkSync(`${dest}/sub/reallysub/six`), '../../one', 'created the symlink with the appropriate target')
+  t.equal(fs.readlinkSync(`${dest}/sub/reallysub/six`).replace(/\\/g, '/'), '../../one', 'created the symlink with the appropriate target')
 })
 
 t.test('other types of errors fail', async t => {
