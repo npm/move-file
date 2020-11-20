@@ -103,7 +103,8 @@ t.test('move a directory across devices', async t => {
           six: t.fixture('symlink', '../../one')
         }
       },
-      link: t.fixture('symlink', './sub')
+      link: t.fixture('symlink', './sub'),
+      abs: t.fixture('symlink', process.cwd())
     }
   })
   const dest = `${dir}/dest`
@@ -122,6 +123,8 @@ t.test('move a directory across devices', async t => {
   t.ok(fs.lstatSync(`${dest}/sub/reallysub`).isDirectory(), 'created the innermost subdirectory')
   t.ok(fs.lstatSync(`${dest}/sub/reallysub/six`).isSymbolicLink(), 'created the innermost symlink')
   t.equal(fs.readlinkSync(`${dest}/sub/reallysub/six`).replace(/\\/g, '/'), '../../one', 'created the symlink with the appropriate target')
+  t.ok(fs.lstatSync(`${dest}/abs`).isSymbolicLink(), 'created the absolute path symlink')
+  t.equal(fs.readlinkSync(`${dest}/abs`), process.platform === 'win32' ? `${process.cwd()}\\` : process.cwd(), 'kept the correct absolute path')
 })
 
 t.test('overwrite option', async t => {
