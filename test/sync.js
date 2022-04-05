@@ -1,8 +1,7 @@
 const fs = require('fs')
-const {join} = require('path')
+const { join } = require('path')
 const t = require('tap')
 const moveFile = require('../')
-const requireInject = require('require-inject')
 
 const fixture = '🦄'
 
@@ -24,9 +23,9 @@ t.test('move a directory', async t => {
       two: fixture,
       sub: {
         three: fixture,
-        four: fixture
-      }
-    }
+        four: fixture,
+      },
+    },
   })
   const dest = `${dir}/dest`
   moveFile.sync(`${dir}/src`, dest)
@@ -43,10 +42,12 @@ t.test('move a directory', async t => {
 t.test('move a file across devices', async t => {
   const exdevError = new Error()
   exdevError.code = 'EXDEV'
-  const moveFile = requireInject('../', {
+  const moveFileWithError = t.mock('../', {
     fs: {
       ...fs,
-      renameSync: () => { throw exdevError },
+      renameSync: () => {
+        throw exdevError
+      },
     },
   })
 
@@ -54,17 +55,19 @@ t.test('move a file across devices', async t => {
     src: fixture,
   })
   const dest = `${dir}/dest`
-  moveFile.sync(`${dir}/src`, dest)
+  moveFileWithError.sync(`${dir}/src`, dest)
   t.equal(fs.readFileSync(dest, 'utf8'), fixture)
 })
 
 t.test('move a file across devices (EPERM)', async t => {
   const exdevError = new Error()
   exdevError.code = 'EPERM'
-  const moveFile = requireInject('../', {
+  const moveFileWithError = t.mock('../', {
     fs: {
       ...fs,
-      renameSync: () => { throw exdevError },
+      renameSync: () => {
+        throw exdevError
+      },
     },
   })
 
@@ -72,17 +75,19 @@ t.test('move a file across devices (EPERM)', async t => {
     src: fixture,
   })
   const dest = `${dir}/dest`
-  moveFile.sync(`${dir}/src`, dest)
+  moveFileWithError.sync(`${dir}/src`, dest)
   t.equal(fs.readFileSync(dest, 'utf8'), fixture)
 })
 
 t.test('move a directory across devices', async t => {
   const exdevError = new Error()
   exdevError.code = 'EXDEV'
-  const moveFile = requireInject('../', {
+  const moveFileWithError = t.mock('../', {
     fs: {
       ...fs,
-      renameSync: () => { throw exdevError },
+      renameSync: () => {
+        throw exdevError
+      },
     },
   })
 
@@ -95,15 +100,15 @@ t.test('move a directory across devices', async t => {
         four: fixture,
         five: t.fixture('symlink', './four'),
         reallysub: {
-          six: t.fixture('symlink', '../../one')
-        }
+          six: t.fixture('symlink', '../../one'),
+        },
       },
       link: t.fixture('symlink', './sub'),
-      abs: t.fixture('symlink', process.cwd())
-    }
+      abs: t.fixture('symlink', process.cwd()),
+    },
   })
   const dest = `${dir}/dest`
-  moveFile.sync(`${dir}/src`, dest)
+  moveFileWithError.sync(`${dir}/src`, dest)
   t.ok(fs.statSync(dest).isDirectory(), 'created a directory')
   t.equal(fs.readFileSync(`${dest}/one`, 'utf8'), fixture, 'copied file one')
   t.equal(fs.readFileSync(`${dest}/two`, 'utf8'), fixture, 'copied file two')
@@ -114,21 +119,35 @@ t.test('move a directory across devices', async t => {
   t.equal(fs.readlinkSync(`${dest}/sub/five`).replace(/\\/g, '/'), './four', 'created file symlink')
   t.ok(fs.lstatSync(`${dest}/link`).isSymbolicLink(), 'created a directory symbolic link')
   // below assertion varies for windows because junctions are absolute paths
-  t.equal(fs.readlinkSync(`${dest}/link`), process.platform === 'win32' ? join(dest, 'sub\\') : './sub', 'created the directory symbolic link with the correct target')
+  t.equal(
+    fs.readlinkSync(`${dest}/link`),
+    process.platform === 'win32' ? join(dest, 'sub\\') : './sub',
+    'created the directory symbolic link with the correct target'
+  )
   t.ok(fs.lstatSync(`${dest}/sub/reallysub`).isDirectory(), 'created the innermost subdirectory')
   t.ok(fs.lstatSync(`${dest}/sub/reallysub/six`).isSymbolicLink(), 'created the innermost symlink')
-  t.equal(fs.readlinkSync(`${dest}/sub/reallysub/six`).replace(/\\/g, '/'), '../../one', 'created the symlink with the appropriate target')
+  t.equal(
+    fs.readlinkSync(`${dest}/sub/reallysub/six`).replace(/\\/g, '/'),
+    '../../one',
+    'created the symlink with the appropriate target'
+  )
   t.ok(fs.lstatSync(`${dest}/abs`).isSymbolicLink(), 'created the absolute path symlink')
-  t.equal(fs.readlinkSync(`${dest}/abs`), process.platform === 'win32' ? `${process.cwd()}\\` : process.cwd(), 'kept the correct absolute path')
+  t.equal(
+    fs.readlinkSync(`${dest}/abs`),
+    process.platform === 'win32' ? `${process.cwd()}\\` : process.cwd(),
+    'kept the correct absolute path'
+  )
 })
 
 t.test('move a directory across devices (EPERM)', async t => {
   const exdevError = new Error()
   exdevError.code = 'EXDEV'
-  const moveFile = requireInject('../', {
+  const moveFileWithError = t.mock('../', {
     fs: {
       ...fs,
-      renameSync: () => { throw exdevError },
+      renameSync: () => {
+        throw exdevError
+      },
     },
   })
 
@@ -141,15 +160,15 @@ t.test('move a directory across devices (EPERM)', async t => {
         four: fixture,
         five: t.fixture('symlink', './four'),
         reallysub: {
-          six: t.fixture('symlink', '../../one')
-        }
+          six: t.fixture('symlink', '../../one'),
+        },
       },
       link: t.fixture('symlink', './sub'),
-      abs: t.fixture('symlink', process.cwd())
-    }
+      abs: t.fixture('symlink', process.cwd()),
+    },
   })
   const dest = `${dir}/dest`
-  moveFile.sync(`${dir}/src`, dest)
+  moveFileWithError.sync(`${dir}/src`, dest)
   t.ok(fs.statSync(dest).isDirectory(), 'created a directory')
   t.equal(fs.readFileSync(`${dest}/one`, 'utf8'), fixture, 'copied file one')
   t.equal(fs.readFileSync(`${dest}/two`, 'utf8'), fixture, 'copied file two')
@@ -160,21 +179,35 @@ t.test('move a directory across devices (EPERM)', async t => {
   t.equal(fs.readlinkSync(`${dest}/sub/five`).replace(/\\/g, '/'), './four', 'created file symlink')
   t.ok(fs.lstatSync(`${dest}/link`).isSymbolicLink(), 'created a directory symbolic link')
   // below assertion varies for windows because junctions are absolute paths
-  t.equal(fs.readlinkSync(`${dest}/link`), process.platform === 'win32' ? join(dest, 'sub\\') : './sub', 'created the directory symbolic link with the correct target')
+  t.equal(
+    fs.readlinkSync(`${dest}/link`),
+    process.platform === 'win32' ? join(dest, 'sub\\') : './sub',
+    'created the directory symbolic link with the correct target'
+  )
   t.ok(fs.lstatSync(`${dest}/sub/reallysub`).isDirectory(), 'created the innermost subdirectory')
   t.ok(fs.lstatSync(`${dest}/sub/reallysub/six`).isSymbolicLink(), 'created the innermost symlink')
-  t.equal(fs.readlinkSync(`${dest}/sub/reallysub/six`).replace(/\\/g, '/'), '../../one', 'created the symlink with the appropriate target')
+  t.equal(
+    fs.readlinkSync(`${dest}/sub/reallysub/six`).replace(/\\/g, '/'),
+    '../../one',
+    'created the symlink with the appropriate target'
+  )
   t.ok(fs.lstatSync(`${dest}/abs`).isSymbolicLink(), 'created the absolute path symlink')
-  t.equal(fs.readlinkSync(`${dest}/abs`), process.platform === 'win32' ? `${process.cwd()}\\` : process.cwd(), 'kept the correct absolute path')
+  t.equal(
+    fs.readlinkSync(`${dest}/abs`),
+    process.platform === 'win32' ? `${process.cwd()}\\` : process.cwd(),
+    'kept the correct absolute path'
+  )
 })
 
 t.test('other types of errors fail', async t => {
   const randoError = new Error()
   randoError.code = 'ERANDO'
-  const moveFile = requireInject('../', {
+  const moveFileWithError = t.mock('../', {
     fs: {
       ...fs,
-      renameSync: () => { throw randoError },
+      renameSync: () => {
+        throw randoError
+      },
     },
   })
 
@@ -182,7 +215,7 @@ t.test('other types of errors fail', async t => {
     src: fixture,
   })
   const dest = `${dir}/dest`
-  t.throws(() => moveFile.sync(`${dir}/src`, dest), randoError)
+  t.throws(() => moveFileWithError.sync(`${dir}/src`, dest), randoError)
 })
 
 t.test('overwrite option', async t => {
@@ -190,7 +223,7 @@ t.test('overwrite option', async t => {
     src: 'x',
     dest: 'y',
   })
-  t.throws(() => moveFile.sync(`${dir}/src`, `${dir}/dest`, {overwrite: false}))
+  t.throws(() => moveFile.sync(`${dir}/src`, `${dir}/dest`, { overwrite: false }))
   t.equal(fs.readFileSync(`${dir}/dest`, 'utf8'), 'y')
   moveFile.sync(`${dir}/src`, `${dir}/dest`)
   t.equal(fs.readFileSync(`${dir}/dest`, 'utf8'), 'x')
@@ -203,15 +236,17 @@ t.test('overwrite option with non-ENOENT access error', async t => {
   const er = Object.assign(new Error('its there, just bad'), {
     code: 'ETHEREBUTBAD',
   })
-  const moveFile = requireInject('../', {
+  const moveFileWithError = t.mock('../', {
     fs: {
       ...fs,
-      accessSync: () => { throw er },
+      accessSync: () => {
+        throw er
+      },
     },
   })
-  t.throws(() => moveFile.sync(`${dir}/src`, `${dir}/dest`, {overwrite: false}))
+  t.throws(() => moveFileWithError.sync(`${dir}/src`, `${dir}/dest`, { overwrite: false }))
   // it actually isn't there tho, so this fails, obviously
   t.throws(() => fs.readFileSync(`${dir}/dest`, 'utf8'), 'y')
-  moveFile.sync(`${dir}/src`, `${dir}/dest`)
+  moveFileWithError.sync(`${dir}/src`, `${dir}/dest`)
   t.equal(fs.readFileSync(`${dir}/dest`, 'utf8'), 'x')
 })
