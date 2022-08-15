@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/npm/move-file/compare/v2.0.0...v2.0.1) (2022-08-15)
+
+
+### Bug Fixes
+
+* linting ([#19](https://github.com/npm/move-file/issues/19)) ([919bbd5](https://github.com/npm/move-file/commit/919bbd5bc1691c6731af0892d2be8d489fa4b528))
+
 ## [2.0.0](https://github.com/npm/move-file/compare/v1.1.2...v2.0.0) (2022-04-05)
 
 
