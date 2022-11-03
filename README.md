@@ -1,5 +1,9 @@
 # @npmcli/move-file
 
+> **Warning**: This has been archived and the method has been moved to [`@npmcli/fs`](https://github.com/npm/fs)
+
+---
+
 A fork of [move-file](https://github.com/sindresorhus/move-file) with
 compatibility with all node 10.x versions.
 
